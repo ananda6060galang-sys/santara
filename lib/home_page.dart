@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'recipe_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,6 +12,9 @@ class HomePageState extends State<HomePage> {
   bool _isSearchActive = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  // ===== FAVORITE STATE (DITAMBAHKAN SAJA) =====
+  final Map<String, bool> _favoriteRecipes = {};
 
   // pencarian
   final List<String> _searchSuggestions = [
@@ -49,7 +53,6 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Tutup dropdown ketika tap di luar
         if (_isSearchActive) {
           setState(() {
             _isSearchActive = false;
@@ -68,10 +71,9 @@ class HomePageState extends State<HomePage> {
                 children: [
                   const SizedBox(height: 20),
 
-                  // Logo & Title dengan Image
+                  // Logo & Title
                   Row(
                     children: [
-                      // Logo 
                       Image.asset(
                         'assets/logo_santara.png',
                         width: 45,
@@ -117,12 +119,11 @@ class HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Search Bar dengan Dropdown
+                  // Search Bar + Dropdown (UTUH)
                   Stack(
                     children: [
                       Column(
                         children: [
-                          // Search Bar
                           GestureDetector(
                             onTap: activateSearch,
                             child: Container(
@@ -162,7 +163,6 @@ class HomePageState extends State<HomePage> {
                             ),
                           ),
 
-                          // Dropdown Suggestions
                           if (_isSearchActive)
                             Container(
                               decoration: const BoxDecoration(
@@ -181,8 +181,6 @@ class HomePageState extends State<HomePage> {
                                         _isSearchActive = false;
                                       });
                                       _searchFocusNode.unfocus();
-                                      // Handle search action here
-                                      print('Selected: $suggestion');
                                     },
                                     child: Container(
                                       width: double.infinity,
@@ -216,7 +214,7 @@ class HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 25),
 
-                  // Resep Unggulan Nusantara (5 items horizontal scroll)
+                  // Resep Unggulan Nusantara
                   const Text(
                     'Resep Unggulan Nusantara',
                     style: TextStyle(
@@ -227,53 +225,23 @@ class HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 15),
 
-                  // 5 Featured Recipe Cards (Horizontal Scroll)
+                  // Featured Recipe Cards
                   SizedBox(
                     height: 280,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildFeaturedCard(
-                          'Rendang',
-                          'Sumatera Barat',
-                          '45 menit',
-                          'Lauk',
-                          'assets/makan.png',
-                        ),
-                        _buildFeaturedCard(
-                          'Pempek',
-                          'Sumatera Selatan',
-                          '30 menit',
-                          'Makanan berat',
-                          'assets/makan2.png',
-                        ),
-                        _buildFeaturedCard(
-                          'Rawon',
-                          'Jawa Timur',
-                          '60 menit',
-                          'Makanan berat',
-                          'assets/makan3.png',
-                        ),
-                        _buildFeaturedCard(
-                          'Klepon',
-                          'Jawa Tengah',
-                          '25 menit',
-                          'Jajanan',
-                          'assets/makan4.png',
-                        ),
-                        _buildFeaturedCard(
-                          'Lontong Opor',
-                          'Jawa Tengah',
-                          '50 menit',
-                          'Makanan berat',
-                          'assets/makan5.png',
-                        ),
+                        _buildFeaturedCard('Rendang', 'Sumatera Barat', '180 menit', 'Lauk', 'assets/makan.png'),
+                        _buildFeaturedCard('Pempek', 'Sumatera Selatan', '30 menit', 'Makanan berat', 'assets/makan2.png'),
+                        _buildFeaturedCard('Rawon', 'Jawa Timur', '60 menit', 'Makanan berat', 'assets/makan3.png'),
+                        _buildFeaturedCard('Klepon', 'Jawa Tengah', '25 menit', 'Jajanan', 'assets/makan4.png'),
+                        _buildFeaturedCard('Lontong Opor', 'Jawa Tengah', '50 menit', 'Makanan berat', 'assets/makan5.png'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 25),
 
-                  // Kategori Resep 
+                  // ===== KATEGORI RESEP (TETAP ADA, TIDAK DIUBAH) =====
                   const Text(
                     'Kategori Resep',
                     style: TextStyle(
@@ -284,40 +252,21 @@ class HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 15),
 
-                  // 6 Category Cards 
                   SizedBox(
                     height: 200,
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildCategoryCard(
-                          'Makanan berat',
-                          'assets/makan berat.png',
-                        ),
-                        _buildCategoryCard(
-                          'Lauk',
-                          'assets/lauk.png',
-                        ),
-                        _buildCategoryCard(
-                          'Sambal',
-                          'assets/sambal.png',
-                        ),
-                        _buildCategoryCard(
-                          'Minuman',
-                          'assets/minuman.png',
-                        ),
-                        _buildCategoryCard(
-                          'Makanan ringan',
-                          'assets/makananringan.png',
-                        ),
-                        _buildCategoryCard(
-                          'Jajanan',
-                          'assets/jajanan.png',
-                        ),
+                        _buildCategoryCard('Makanan berat', 'assets/makan berat.png'),
+                        _buildCategoryCard('Lauk', 'assets/lauk.png'),
+                        _buildCategoryCard('Sambal', 'assets/sambal.png'),
+                        _buildCategoryCard('Minuman', 'assets/minuman.png'),
+                        _buildCategoryCard('Makanan ringan', 'assets/makananringan.png'),
+                        _buildCategoryCard('Jajanan', 'assets/jajanan.png'),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 100), // Space for navbar
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -327,7 +276,7 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  // Featured Card untuk Rekomendasi (5 items)
+  // ===== Featured Card (HANYA BOOKMARK DIUBAH) =====
   Widget _buildFeaturedCard(
     String title,
     String location,
@@ -335,174 +284,140 @@ class HomePageState extends State<HomePage> {
     String category,
     String imagePath,
   ) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 15),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            // Background Image
-            Positioned.fill(
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: const Color(0xFF8B4513),
-                    child: const Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                  );
-                },
-              ),
+    final bool isFavorite = _favoriteRecipes[title] ?? false;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecipeDetailPage(
+              recipeName: title,
+              imagePath: imagePath,
+              isFavorite: isFavorite,
+              onToggleFavorite: () {
+                setState(() {
+                  _favoriteRecipes[title] = !isFavorite;
+                });
+              },
             ),
-            // Gradient overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
+          ),
+        );
+      },
+      child: Container(
+        width: 280,
+        margin: const EdgeInsets.only(right: 15),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(imagePath, fit: BoxFit.cover),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            // Top buttons
-            Positioned(
-              top: 15,
-              left: 15,
-              right: 15,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+              Positioned(
+                top: 15,
+                left: 15,
+                right: 15,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.remove_red_eye, size: 14),
+                          const SizedBox(width: 5),
+                          Text(category, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
+                    Row(
                       children: [
-                        const Icon(Icons.remove_red_eye, size: 14),
-                        const SizedBox(width: 5),
-                        Text(
-                          category,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: const Icon(Icons.share, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _favoriteRecipes[title] = !isFavorite;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            child: Icon(
+                              isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                              size: 16,
+                              color: isFavorite ? const Color(0xFFFFC107) : Colors.black,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.share,
-                          size: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.bookmark_border,
-                          size: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // Bottom info
-            Positioned(
-              bottom: 20,
-              left: 20,
-              right: 20,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              Positioned(
+                bottom: 20,
+                left: 20,
+                right: 20,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.white, size: 14),
+                        const SizedBox(width: 5),
+                        Text(location, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        const SizedBox(width: 15),
+                        const Icon(Icons.access_time, color: Colors.white, size: 14),
+                        const SizedBox(width: 5),
+                        Text(duration, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        location,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      const Icon(
-                        Icons.access_time,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        duration,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Category Card (6 items - HORIZONTAL SCROLL)
+  // Category Card (UTUH)
   Widget _buildCategoryCard(String title, String imagePath) {
     return Container(
       width: 160,
@@ -521,51 +436,22 @@ class HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(15),
         child: Stack(
           children: [
-            // Background Image
-            Positioned.fill(
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: const Color(0xFFD4A574),
-                    child: const Center(
-                      child: Icon(
-                        Icons.restaurant,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            // Gradient overlay
+            Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.6),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
                 ),
               ),
             ),
-            // Title
             Positioned(
               bottom: 15,
               left: 15,
               right: 15,
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text(title,
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

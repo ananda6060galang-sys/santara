@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_with_navbar.dart';
 
 
 void main() {
@@ -115,7 +116,14 @@ class SignUpPage extends StatelessWidget {
                         ),
                         elevation: 0,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HomeWithNavbar(),
+                          ),
+                        );
+                      },
                       child: const Text(
                         'Daftar',
                         style: TextStyle(

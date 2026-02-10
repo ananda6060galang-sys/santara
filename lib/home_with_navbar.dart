@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'home_page.dart';
 import 'profile_page.dart' as profile_page;
+import 'kategori.dart'; 
 
 
 
@@ -26,7 +27,7 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
     _pages = [
       HomePage(key: _homePageKey),
       HomePage(key: _searchPageKey), // Search page - sama dengan home tapi beda instance
-      const Center(child: Text('KATEGORI', style: TextStyle(fontSize: 24, color: Color(0xFF8B4513)))),
+      const CategoryPage(),
       const Center(child: Text('FAVORIT', style: TextStyle(fontSize: 24, color: Color(0xFF8B4513)))),
       const profile_page.ProfilePage()
     ];
