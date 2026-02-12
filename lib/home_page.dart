@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'recipe_detail_page.dart';
+import 'favorit.dart';
+import 'kategori.dart';
+import 'home_with_navbar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -33,6 +37,26 @@ class HomePageState extends State<HomePage> {
         _isSearchActive = _searchFocusNode.hasFocus;
       });
     });
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    // Pre-load favorite status untuk resep unggulan
+    final favoritedRecipes = [
+      'Rendang',
+      'Pempek',
+      'Rawon',
+      'Klepon',
+      'Lontong Opor',
+    ];
+    for (final recipeName in favoritedRecipes) {
+      final isFav = await isRecipeFavorited(recipeName);
+      if (mounted) {
+        setState(() {
+          _favoriteRecipes[recipeName] = isFav;
+        });
+      }
+    }
   }
 
   @override
@@ -142,16 +166,22 @@ class HomePageState extends State<HomePage> {
                                 decoration: InputDecoration(
                                   hintText: 'Cari resep...',
                                   hintStyle: TextStyle(
-                                    color: const Color(0xFF9C7A5A).withOpacity(0.5),
+                                    color: const Color(
+                                      0xFF9C7A5A,
+                                    ).withOpacity(0.5),
                                     fontSize: 15,
                                   ),
                                   prefixIcon: Icon(
                                     Icons.search,
-                                    color: const Color(0xFF6B3E26).withOpacity(0.7),
+                                    color: const Color(
+                                      0xFF6B3E26,
+                                    ).withOpacity(0.7),
                                   ),
                                   suffixIcon: Icon(
                                     Icons.mic,
-                                    color: const Color(0xFF6B3E26).withOpacity(0.7),
+                                    color: const Color(
+                                      0xFF6B3E26,
+                                    ).withOpacity(0.7),
                                   ),
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(
@@ -191,7 +221,9 @@ class HomePageState extends State<HomePage> {
                                       decoration: BoxDecoration(
                                         border: Border(
                                           top: BorderSide(
-                                            color: const Color(0xFF8B4513).withOpacity(0.1),
+                                            color: const Color(
+                                              0xFF8B4513,
+                                            ).withOpacity(0.1),
                                             width: 1,
                                           ),
                                         ),
@@ -199,7 +231,9 @@ class HomePageState extends State<HomePage> {
                                       child: Text(
                                         suggestion,
                                         style: TextStyle(
-                                          color: const Color(0xFF8B4513).withOpacity(0.7),
+                                          color: const Color(
+                                            0xFF8B4513,
+                                          ).withOpacity(0.7),
                                           fontSize: 14,
                                         ),
                                       ),
@@ -231,11 +265,41 @@ class HomePageState extends State<HomePage> {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildFeaturedCard('Rendang', 'Sumatera Barat', '180 menit', 'Lauk', 'assets/makan.png'),
-                        _buildFeaturedCard('Pempek', 'Sumatera Selatan', '30 menit', 'Makanan berat', 'assets/makan2.png'),
-                        _buildFeaturedCard('Rawon', 'Jawa Timur', '60 menit', 'Makanan berat', 'assets/makan3.png'),
-                        _buildFeaturedCard('Klepon', 'Jawa Tengah', '25 menit', 'Jajanan', 'assets/makan4.png'),
-                        _buildFeaturedCard('Lontong Opor', 'Jawa Tengah', '50 menit', 'Makanan berat', 'assets/makan5.png'),
+                        _buildFeaturedCard(
+                          'Rendang',
+                          'Sumatera Barat',
+                          '180 menit',
+                          'Lauk',
+                          'assets/makan.png',
+                        ),
+                        _buildFeaturedCard(
+                          'Pempek',
+                          'Sumatera Selatan',
+                          '30 menit',
+                          'Makanan berat',
+                          'assets/makan2.png',
+                        ),
+                        _buildFeaturedCard(
+                          'Rawon',
+                          'Jawa Timur',
+                          '60 menit',
+                          'Makanan berat',
+                          'assets/makan3.png',
+                        ),
+                        _buildFeaturedCard(
+                          'Klepon',
+                          'Jawa Tengah',
+                          '25 menit',
+                          'Jajanan',
+                          'assets/makan4.png',
+                        ),
+                        _buildFeaturedCard(
+                          'Lontong Opor',
+                          'Jawa Tengah',
+                          '50 menit',
+                          'Makanan berat',
+                          'assets/makan5.png',
+                        ),
                       ],
                     ),
                   ),
@@ -257,11 +321,17 @@ class HomePageState extends State<HomePage> {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildCategoryCard('Makanan berat', 'assets/makan berat.png'),
+                        _buildCategoryCard(
+                          'Makanan berat',
+                          'assets/makan_berat.png',
+                        ),
                         _buildCategoryCard('Lauk', 'assets/lauk.png'),
                         _buildCategoryCard('Sambal', 'assets/sambal.png'),
                         _buildCategoryCard('Minuman', 'assets/minuman.png'),
-                        _buildCategoryCard('Makanan ringan', 'assets/makananringan.png'),
+                        _buildCategoryCard(
+                          'Makanan ringan',
+                          'assets/makananringan.png',
+                        ),
                         _buildCategoryCard('Jajanan', 'assets/jajanan.png'),
                       ],
                     ),
@@ -294,12 +364,8 @@ class HomePageState extends State<HomePage> {
             builder: (context) => RecipeDetailPage(
               recipeName: title,
               imagePath: imagePath,
-              isFavorite: isFavorite,
-              onToggleFavorite: () {
-                setState(() {
-                  _favoriteRecipes[title] = !isFavorite;
-                });
-              },
+              location: location,
+              duration: duration,
             ),
           ),
         );
@@ -321,18 +387,13 @@ class HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: Image.asset(imagePath, fit: BoxFit.cover),
-              ),
+              Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   ),
                 ),
               ),
@@ -344,7 +405,10 @@ class HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -353,31 +417,89 @@ class HomePageState extends State<HomePage> {
                         children: [
                           const Icon(Icons.remove_red_eye, size: 14),
                           const SizedBox(width: 5),
-                          Text(category, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          Text(
+                            category,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                          child: const Icon(Icons.share, size: 16),
-                        ),
-                        const SizedBox(width: 10),
                         GestureDetector(
                           onTap: () {
-                            setState(() {
-                              _favoriteRecipes[title] = !isFavorite;
-                            });
+                            final text =
+                                '''
+🍽️ *$title*
+
+📍 Lokasi: $location
+⏱️ Waktu: $duration
+
+Bagikan resep nusantara favorit kamu! 🇮🇩
+                            ''';
+
+                            Share.share(
+                              text,
+                              subject: 'Resep $title - Santara',
+                            );
                           },
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.share, size: 16),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () async {
+                            final recipeData = {
+                              'id': title,
+                              'title': title,
+                              'imagePath': imagePath,
+                              'location': location,
+                              'duration': duration,
+                              'description': '',
+                            };
+
+                            final result = await toggleFavorite(recipeData);
+                            if (mounted) {
+                              setState(() {
+                                _favoriteRecipes[title] = result;
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    result
+                                        ? '$title ditambahkan ke favorit'
+                                        : '$title dihapus dari favorit',
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                  backgroundColor: const Color(0xFF8B4513),
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
                             child: Icon(
-                              isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                              isFavorite
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border,
                               size: 16,
-                              color: isFavorite ? const Color(0xFFFFC107) : Colors.black,
+                              color: isFavorite
+                                  ? const Color(0xFFFFC107)
+                                  : Colors.black,
                             ),
                           ),
                         ),
@@ -393,18 +515,44 @@ class HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.location_on, color: Colors.white, size: 14),
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                         const SizedBox(width: 5),
-                        Text(location, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        Text(
+                          location,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
                         const SizedBox(width: 15),
-                        const Icon(Icons.access_time, color: Colors.white, size: 14),
+                        const Icon(
+                          Icons.access_time,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                         const SizedBox(width: 5),
-                        Text(duration, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        Text(
+                          duration,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -417,43 +565,61 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  // Category Card (UTUH)
+  // Category Card
   Widget _buildCategoryCard(String title, String imagePath) {
-    return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 15),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                HomeWithNavbar(initialIndex: 2, selectedCategory: title),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Stack(
-          children: [
-            Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 15,
-              left: 15,
-              right: 15,
-              child: Text(title,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+        );
+      },
+
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 15),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Stack(
+            children: [
+              Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 15,
+                left: 15,
+                right: 15,
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

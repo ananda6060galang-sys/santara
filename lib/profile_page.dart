@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
+import 'favorit.dart';
+import 'editprofile.dart';
+import 'riwayatpage.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -11,12 +14,10 @@ class ProfilePage extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // TOP SECTION - Berhenti di tengah profile card
+            // TOP SECTION BACKGROUND
             Container(
-              height: 150, // Tinggi lebih pendek, berhenti di tengah profile
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8D5B7),
-              ),
+              height: 150,
+              decoration: const BoxDecoration(color: Color(0xFFE8D5B7)),
             ),
 
             // MAIN CONTENT
@@ -126,8 +127,9 @@ class ProfilePage extends StatelessWidget {
                                   'felicia.reid@example.com',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: const Color(0xFF2C2C2C)
-                                        .withOpacity(0.6),
+                                    color: const Color(
+                                      0xFF2C2C2C,
+                                    ).withOpacity(0.6),
                                     letterSpacing: 0.1,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -137,16 +139,26 @@ class ProfilePage extends StatelessWidget {
                           ),
 
                           // EDIT BUTTON
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFDF8F3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.edit_outlined,
-                              color: Color(0xFF8B5A3C),
-                              size: 20,
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const EditProfilePage(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFDF8F3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.edit_outlined,
+                                color: Color(0xFF8B5A3C),
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],
@@ -163,7 +175,14 @@ class ProfilePage extends StatelessWidget {
                         _buildMenuItem(
                           icon: Icons.history,
                           title: 'Riwayat',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                               context,
+                              MaterialPageRoute(
+                                builder: (context) => const RiwayatPage(),
+                              ),
+                            );
+                          },
                         ),
                         _buildMenuItem(
                           icon: Icons.info_outline,
@@ -178,7 +197,14 @@ class ProfilePage extends StatelessWidget {
                         _buildMenuItem(
                           icon: Icons.bookmark_outline,
                           title: 'Koleksi',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const KoleksiPage(),
+                              ),
+                            );
+                          },
                         ),
                         _buildMenuItem(
                           icon: Icons.logout,
@@ -246,7 +272,9 @@ class ProfilePage extends StatelessWidget {
                           onTap: () {
                             Navigator.of(context).pushAndRemoveUntil(
                               PageRouteBuilder(
-                                pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const LoginPage(),
                                 transitionDuration: Duration.zero,
                               ),
                               (Route<dynamic> route) => false,
@@ -319,15 +347,13 @@ class ProfilePage extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 18.0, horizontal: 4.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 18.0,
+              horizontal: 4.0,
+            ),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  color: const Color(0xFF8B5A3C),
-                  size: 26,
-                ),
+                Icon(icon, color: const Color(0xFF8B5A3C), size: 26),
                 const SizedBox(width: 18),
                 Expanded(
                   child: Text(

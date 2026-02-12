@@ -2,19 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'home_page.dart';
 import 'profile_page.dart' as profile_page;
-import 'kategori.dart'; 
-
-
+import 'kategori.dart';
+import 'favorit.dart';
 
 class HomeWithNavbar extends StatefulWidget {
-  const HomeWithNavbar({super.key});
+  final int initialIndex;
+  final String? selectedCategory;
+
+  const HomeWithNavbar({
+    super.key,
+    this.initialIndex = 0,
+    this.selectedCategory,
+  });
 
   @override
   State<HomeWithNavbar> createState() => _HomeWithNavbarState();
 }
 
 class _HomeWithNavbarState extends State<HomeWithNavbar> {
-  int _currentIndex = 0;
+  late int _currentIndex;
+
   final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
   final GlobalKey<HomePageState> _homePageKey = GlobalKey<HomePageState>();
   final GlobalKey<HomePageState> _searchPageKey = GlobalKey<HomePageState>();
@@ -24,11 +31,14 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
   @override
   void initState() {
     super.initState();
+
+    _currentIndex = widget.initialIndex;
+
     _pages = [
       HomePage(key: _homePageKey),
-      HomePage(key: _searchPageKey), // Search page - sama dengan home tapi beda instance
-      const CategoryPage(),
-      const Center(child: Text('FAVORIT', style: TextStyle(fontSize: 24, color: Color(0xFF8B4513)))),
+      HomePage(key: _searchPageKey),
+      CategoryPage(selectedCategory: widget.selectedCategory),
+      const KoleksiPage(),
       const profile_page.ProfilePage()
     ];
   }
@@ -72,6 +82,7 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
                     size: 26,
                     color: Colors.black,
                   ),
+
             // Search Icon
             _currentIndex == 1
                 ? Container(
@@ -91,6 +102,7 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
                     size: 26,
                     color: Colors.black,
                   ),
+
             // Kategori Icon
             _currentIndex == 2
                 ? Container(
@@ -110,6 +122,7 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
                     size: 26,
                     color: Colors.black,
                   ),
+
             // Favorite Icon
             _currentIndex == 3
                 ? Container(
@@ -129,6 +142,7 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
                     size: 26,
                     color: Colors.black,
                   ),
+
             // Profile Icon
             _currentIndex == 4
                 ? Container(
@@ -158,7 +172,7 @@ class _HomeWithNavbarState extends State<HomeWithNavbar> {
             setState(() {
               _currentIndex = index;
             });
-            
+
             // Jika pindah ke search page, aktifkan dropdown
             if (index == 1) {
               Future.delayed(const Duration(milliseconds: 100), () {
