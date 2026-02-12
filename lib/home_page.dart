@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'recipe_detail_page.dart';
 import 'favorit.dart';
-import 'kategori.dart';
 import 'home_with_navbar.dart';
 
 class HomePage extends StatefulWidget {

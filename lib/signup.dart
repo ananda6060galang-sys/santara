@@ -54,7 +54,7 @@ class SignUpPage extends StatelessWidget {
                   Image.asset(
                     'assets/logo_santara.png',
                     height: 140,
-                    width: 140,
+                    width: 110,
                   ),
 
                   const SizedBox(height: 2),
