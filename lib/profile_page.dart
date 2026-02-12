@@ -3,6 +3,8 @@ import 'login.dart';
 import 'favorit.dart';
 import 'editprofile.dart';
 import 'riwayatpage.dart';
+import 'infoakunpage.dart';
+import 'keamanan_akun.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -37,7 +39,6 @@ class ProfilePage extends StatelessWidget {
                             size: 22,
                           ),
                           onPressed: () {
-                            Navigator.pop(context);
                           },
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -187,12 +188,26 @@ class ProfilePage extends StatelessWidget {
                         _buildMenuItem(
                           icon: Icons.info_outline,
                           title: 'Info akun',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const InfoAkunPage(),
+                              ),
+                            );
+                          },
                         ),
                         _buildMenuItem(
                           icon: Icons.security_outlined,
                           title: 'Keamanan akun',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const KeamananAkunPage(),
+                              ),
+                            );
+                          },
                         ),
                         _buildMenuItem(
                           icon: Icons.bookmark_outline,
