@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "776610845345",
+    "project_id": "santara-app-2ff8f",
+    "storage_bucket": "santara-app-2ff8f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776610845345:android:6429717e4d27c800b756e0",
+        "android_client_info": {
+          "package_name": "com.example.santara_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsAvaq2zAdhFd4DiyhT3blu69niuo_T-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
