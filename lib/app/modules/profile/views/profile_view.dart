@@ -88,45 +88,60 @@ class ProfilePage extends GetView<ProfileController> {
                               ],
                             ),
                             child: ClipOval(
-                              child: Image.asset(
-                                'assets/profile.png',
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.person,
-                                    size: 36,
-                                    color: Colors.white,
+                              child: Obx(() {
+                                if (controller.avatarUrl.value.isNotEmpty) {
+                                  return Image.network(
+                                    controller.avatarUrl.value,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildInitialAvatar();
+                                    },
                                   );
-                                },
-                              ),
+                                }
+                                return _buildInitialAvatar();
+                              }),
                             ),
                           ),
                           const SizedBox(width: 16),
 
-                          // NAME & EMAIL
+                          // NAME & EMAIL (dari supabase tb user )
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text(
-                                  'Floyd Miles',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2C2C2C),
-                                    letterSpacing: 0.2,
+                                Obx(
+                                  () => Text(
+                                    controller.username.value.isEmpty
+                                        ? 'User'
+                                        : controller.username.value,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2C2C2C),
+                                      letterSpacing: 0.2,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  'felicia.reid@example.com',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: const Color(0xFF2C2C2C).withOpacity(0.6),
-                                    letterSpacing: 0.1,
+                                // email pengguna (ambil dari tb user )
+                                Obx(
+                                  () => Text(
+                                    controller.email.value.isEmpty
+                                        ? 'Belum ada email'
+                                        : controller.email.value,
+                                    style: TextStyle(
+                                      fontSize: 13,
+
+                                      color: const Color(
+                                        0xFF2C2C2C,
+                                      ).withOpacity(0.6),
+                                      letterSpacing: 0.1,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
@@ -246,6 +261,33 @@ class ProfilePage extends GetView<ProfileController> {
             thickness: 1,
           ),
       ],
+    );
+  }
+
+  // avatar huruf inisial
+  Widget _buildInitialAvatar() {
+    String initial = '?';
+
+    if (controller.username.value.isNotEmpty) {
+      initial = controller.username.value[0].toUpperCase();
+    }
+
+    return Container(
+      color: const Color(0xFFD4A574),
+
+      alignment: Alignment.center,
+
+      child: Text(
+        initial,
+
+        style: const TextStyle(
+          fontSize: 28,
+
+          fontWeight: FontWeight.bold,
+
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }

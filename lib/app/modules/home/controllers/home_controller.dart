@@ -12,28 +12,55 @@ import '../../recipe_detail/controllers/recipe_detail_controller.dart';
 import '../../recipe_detail/views/recipe_detail_view.dart';
 
 class HomeController extends GetxController {
+  // =====================================================
+  // CONTROLLER SEARCH
+  // buat nyimpen text search
+  // =====================================================
 
-  final searchController =
-      TextEditingController();
+  final searchController = TextEditingController();
 
-  final searchFocusNode =
-      FocusNode();
+  // =====================================================
+  // FOCUS NODE SEARCH
+  // detect search lagi aktif apa ngga
+  // =====================================================
 
-  final isSearchActive =
-      false.obs;
+  final searchFocusNode = FocusNode();
 
-  final favoriteRecipes =
-      <String, bool>{}.obs;
+  // =====================================================
+  // STATUS SEARCH
+  // true = search kebuka
+  // false = search ketutup
+  // =====================================================
 
-  final supabase =
-      Supabase.instance.client;
+  final isSearchActive = false.obs;
+
+  // =====================================================
+  // LOADING
+  // buat shimmer loading tadi
+  // =====================================================
+
+  final isLoading = true.obs;
+
+  // =====================================================
+  // FAVORITE CACHE
+  // nyimpen status bookmark
+  // =====================================================
+
+  final favoriteRecipes = <String, bool>{}.obs;
+
+  // =====================================================
+  // SUPABASE CLIENT
+  // koneksi database
+  // =====================================================
+
+  final supabase = Supabase.instance.client;
 
   // =====================================================
   // SEARCH SUGGESTIONS
+  // suggestion pas search diklik
   // =====================================================
 
   final searchSuggestions = [
-
     'Resep Rendang Padang',
 
     'Sambal 20 menit',
@@ -47,220 +74,168 @@ class HomeController extends GetxController {
 
   // =====================================================
   // FEATURED RECIPES
+  // list resep dari database
   // =====================================================
 
-  final featuredRecipes =
-      <RecipeModel>[].obs;
+  final featuredRecipes = <RecipeModel>[].obs;
 
   // =====================================================
   // CATEGORY LIST
+  // category realtime dari database
   // =====================================================
 
-  final categoryList = [
-
-    {
-      'title': 'Makanan berat',
-
-      'imagePath':
-          'assets/makan_berat.png'
-    },
-
-    {
-      'title': 'Lauk',
-
-      'imagePath':
-          'assets/lauk.png'
-    },
-
-    {
-      'title': 'Sambal',
-
-      'imagePath':
-          'assets/sambal.png'
-    },
-
-    {
-      'title': 'Minuman',
-
-      'imagePath':
-          'assets/minuman.png'
-    },
-
-    {
-      'title': 'Makanan ringan',
-
-      'imagePath':
-          'assets/makananringan.png'
-    },
-
-    {
-      'title': 'Jajanan',
-
-      'imagePath':
-          'assets/jajanan.png'
-    },
-  ];
+  final categoryList = <Map<String, dynamic>>[].obs;
 
   // =====================================================
   // INIT
+  // pertama kali controller jalan
   // =====================================================
 
   @override
   void onInit() {
-
     super.onInit();
 
+    // detect search focus
     searchFocusNode.addListener(() {
-
-      isSearchActive.value =
-          searchFocusNode.hasFocus;
+      isSearchActive.value = searchFocusNode.hasFocus;
     });
 
+    // ambil data recipe
     getRecipes();
   }
 
   // =====================================================
   // GET RECIPES
+  // fetch resep dari supabase
   // =====================================================
 
   Future<void> getRecipes() async {
+    // loading nyala dulu
+    isLoading.value = true;
 
     try {
-
-      final data =
-          await supabase
-              .from('recipes')
-              .select('''
+      final data = await supabase.from('recipes').select('''
                 *,
                 categories(name)
               ''');
 
-      featuredRecipes.value =
+      // masukin data ke list recipe
+      featuredRecipes.value = data.map<RecipeModel>((item) {
+        return RecipeModel.fromJson(item);
+      }).toList();
 
-          data.map<RecipeModel>((item) {
-
-            return RecipeModel.fromJson(item);
-
-          }).toList();
-
+      // load status favorite
       await _loadFavorites();
+      await getCategories();
+    } catch (e) {
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      // loading dimatiin
+      isLoading.value = false;
     }
+  }
 
-    catch (e) {
+  // =====================================================
+  // GET CATEGORIES
+  // ambil category + image dari database
+  // =====================================================
 
+  Future<void> getCategories() async {
+    try {
+      final data = await supabase.from('categories').select();
+
+      // masukin category ke list
+      categoryList.value = List<Map<String, dynamic>>.from(data);
+    } catch (e) {
       Get.snackbar(
-
-        'Error',
+        'Error Category',
 
         e.toString(),
 
-        snackPosition:
-            SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.BOTTOM,
       );
     }
   }
 
   // =====================================================
   // LOAD FAVORITES
+  // ngecek recipe mana aja yg dibookmark
   // =====================================================
 
   Future<void> _loadFavorites() async {
+    for (final recipe in featuredRecipes) {
+      final isFav = await isRecipeFavorited(recipe.title);
 
-    for (final recipe
-        in featuredRecipes) {
-
-      final isFav =
-          await isRecipeFavorited(
-              recipe.title);
-
-      favoriteRecipes[
-          recipe.title] = isFav;
+      favoriteRecipes[recipe.title] = isFav;
     }
   }
 
   // =====================================================
-  // SEARCH
+  // AKTIFIN SEARCH
   // =====================================================
 
   void activateSearch() {
+    isSearchActive.value = true;
 
-    isSearchActive.value =
-        true;
-
-    searchFocusNode
-        .requestFocus();
+    searchFocusNode.requestFocus();
   }
+
+  // =====================================================
+  // MATIIN SEARCH
+  // =====================================================
 
   void deactivateSearch() {
+    isSearchActive.value = false;
 
-    isSearchActive.value =
-        false;
-
-    searchFocusNode
-        .unfocus();
+    searchFocusNode.unfocus();
   }
 
-  void selectSuggestion(
-      String suggestion) {
+  // =====================================================
+  // PAS SUGGESTION DIKLIK
+  // =====================================================
 
-    searchController.text =
-        suggestion;
+  void selectSuggestion(String suggestion) {
+    searchController.text = suggestion;
 
     deactivateSearch();
   }
 
   // =====================================================
-  // GO TO DETAIL
+  // PINDAH KE DETAIL RESEP
   // =====================================================
 
-  void goToRecipeDetail(
-      RecipeModel recipe) {
-
+  void goToRecipeDetail(RecipeModel recipe) {
     Get.to(
-
       () => RecipeDetailView(),
 
       arguments: recipe,
 
       binding: BindingsBuilder(() {
-
-        Get.lazyPut<
-            RecipeDetailController>(
-
-          () =>
-              RecipeDetailController(),
-        );
+        Get.lazyPut<RecipeDetailController>(() => RecipeDetailController());
       }),
     );
   }
 
   // =====================================================
-  // GO TO CATEGORY
+  // PINDAH KE CATEGORY
   // =====================================================
 
-  void goToCategory(
-      String categoryTitle) {
+  void goToCategory(String categoryTitle) {
+    final navController = Get.find<HomeWithNavbarController>();
 
-    final navController =
-        Get.find<
-            HomeWithNavbarController>();
+    navController.selectedCategory.value = categoryTitle;
 
-    navController
-        .selectedCategory.value =
-            categoryTitle;
-
-    navController
-        .changeIndex(2);
+    navController.changeIndex(2);
   }
 
   // =====================================================
   // SHARE RECIPE
+  // buat share resep
   // =====================================================
 
-  void shareRecipe(
-      RecipeModel recipe) {
-
-    final text = '''
+  void shareRecipe(RecipeModel recipe) {
+    final text =
+        '''
 
 🍽️ ${recipe.title}
 
@@ -274,83 +249,60 @@ Bagikan resep nusantara favorit kamu! 🇮🇩
 
 ''';
 
-    Share.share(
-
-      text,
-
-      subject:
-          'Resep ${recipe.title} - Santara',
-    );
+    Share.share(text, subject: 'Resep ${recipe.title} - Santara');
   }
 
   // =====================================================
   // FAVORITE
+  // bookmark recipe
   // =====================================================
 
-  Future<void> toggleFavoriteRecipe(
-      RecipeModel recipe) async {
-
+  Future<void> toggleFavoriteRecipe(RecipeModel recipe) async {
     final recipeData = {
+      'id': recipe.id,
 
-      'id':
-          recipe.id,
+      'title': recipe.title,
 
-      'title':
-          recipe.title,
+      'imagePath': recipe.imageUrl,
 
-      'imagePath':
-          recipe.imageUrl,
+      'location': recipe.location,
 
-      'location':
-          recipe.location,
+      'duration': '${recipe.cookingTime} menit',
 
-      'duration':
-          '${recipe.cookingTime} menit',
-
-      'description':
-          recipe.description,
+      'description': recipe.description,
     };
 
-    final result =
-        await toggleFavorite(
-            recipeData);
+    final result = await toggleFavorite(recipeData);
 
-    favoriteRecipes[
-        recipe.title] = result;
+    favoriteRecipes[recipe.title] = result;
+
+    // refresh biar icon langsung update
+    favoriteRecipes.refresh();
 
     Get.snackbar(
+      result ? 'Ditambahkan' : 'Dihapus',
 
       result
-          ? 'Ditambahkan'
-          : 'Dihapus',
-
-      result
-
           ? '${recipe.title} ditambahkan ke favorit'
-
           : '${recipe.title} dihapus dari favorit',
 
-      snackPosition:
-          SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.BOTTOM,
 
-      backgroundColor:
-          const Color(0xFF8B4513),
+      backgroundColor: const Color(0xFF8B4513),
 
-      colorText:
-          Colors.white,
+      colorText: Colors.white,
 
-      duration:
-          const Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
   }
 
   // =====================================================
   // CLOSE
+  // dispose controller biar aman memory
   // =====================================================
 
   @override
   void onClose() {
-
     searchController.dispose();
 
     searchFocusNode.dispose();

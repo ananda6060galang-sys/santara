@@ -1,214 +1,221 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+
 import '../../recipe_detail/views/recipe_detail_view.dart';
 import '../../recipe_detail/controllers/recipe_detail_controller.dart';
 
-import '../../category/controllers/category_controller.dart';
+import '../controllers/category_controller.dart';
 
-class CategoryPage extends GetView<CategoryController> {
+class CategoryPage extends StatefulWidget {
+  final String? selectedCategory;
 
-  const CategoryPage({
-    super.key,
-    String? selectedCategory,
-  });
+  const CategoryPage({super.key, this.selectedCategory});
+
+  @override
+  State<CategoryPage> createState() => _CategoryPageState();
+}
+
+class _CategoryPageState extends State<CategoryPage> {
+  final controller = Get.find<CategoryController>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // update category sekali aja
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.selectedCategory != null) {
+        controller.setCategory(widget.selectedCategory!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
+      backgroundColor: const Color(0xFFFDF8F3),
 
-      backgroundColor:
-          const Color(0xFFFDF8F3),
+      body: Obx(() {
+        // shimmer loading
+        if (controller.isLoading.value) {
+          return _buildSkeleton();
+        }
 
-      body: SafeArea(
+        return SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
 
-        child: Column(
-
-          children: [
-
-            const SizedBox(height: 16),
-
-            // =====================================================
-            // HEADER CATEGORY
-            // =====================================================
-
-            Obx(
-
-              () => Row(
-
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
+              // header category
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
 
                 children: [
-
                   IconButton(
-
                     icon: const Icon(
-
                       Icons.chevron_left,
 
                       size: 32,
 
-                      color:
-                          Color(0xFF8B4513),
+                      color: Color(0xFF8B4513),
                     ),
 
-                    onPressed:
-                        controller.prevCategory,
+                    onPressed: controller.prevCategory,
                   ),
 
                   IntrinsicWidth(
-
                     child: Column(
-
                       children: [
+                        Obx(
+                          () => Text(
+                            controller.currentCategory,
 
-                        Text(
+                            style: const TextStyle(
+                              fontSize: 22,
 
-                          controller.currentCategory,
+                              fontWeight: FontWeight.bold,
 
-                          style: const TextStyle(
-
-                            fontSize: 22,
-
-                            fontWeight:
-                                FontWeight.bold,
-
-                            color:
-                                Color(0xFF8B4513),
+                              color: Color(0xFF8B4513),
+                            ),
                           ),
                         ),
 
                         const SizedBox(height: 6),
 
-                        Container(
-
-                          height: 2,
-
-                          color:
-                              const Color(
-                                  0xFF8B4513),
-                        ),
+                        Container(height: 2, color: const Color(0xFF8B4513)),
                       ],
                     ),
                   ),
 
                   IconButton(
-
                     icon: const Icon(
-
                       Icons.chevron_right,
 
                       size: 32,
 
-                      color:
-                          Color(0xFF8B4513),
+                      color: Color(0xFF8B4513),
                     ),
 
-                    onPressed:
-                        controller.nextCategory,
+                    onPressed: controller.nextCategory,
                   ),
                 ],
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // =====================================================
-            // LIST RESEP
-            // =====================================================
+              // list recipe
+              Expanded(
+                child: Obx(() {
+                  final recipes = controller.currentRecipes;
 
-            Expanded(
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
 
-              child: Obx(
+                    itemCount: recipes.length,
 
-                () => ListView.builder(
+                    itemBuilder: (context, index) {
+                      final recipe = recipes[index];
 
-                  padding:
-                      const EdgeInsets.symmetric(
-                          horizontal: 20),
+                      final isFavorite = controller.isFavorite(recipe.title);
 
-                  itemCount:
-                      controller.currentRecipes.length,
+                      return _RecipeCard(
+                        title: recipe.title,
 
-                  itemBuilder:
-                      (context, index) {
+                        location: recipe.location,
 
-                    final recipe =
-                        controller.currentRecipes[index];
+                        time: recipe.cookingTime.toString(),
 
-                    final bool isFavorite =
+                        imagePath: recipe.imageUrl,
 
-                        controller.isFavorite(
-                            recipe.title);
+                        isFavorite: isFavorite,
 
-                    return _RecipeCard(
+                        onToggleFavorite: () {
+                          controller.toggleFavoriteRecipe(recipe);
+                        },
 
-                      title:
-                          recipe.title,
+                        onShare: () {
+                          controller.shareRecipe(recipe);
+                        },
 
-                      location:
-                          recipe.location,
+                        onTap: () {
+                          Get.to(
+                            () => RecipeDetailView(),
 
-                      time:
-                          recipe.cookingTime.toString(),
+                            arguments: recipe,
 
-                      imagePath:
-                          recipe.imageUrl,
-
-                      isFavorite:
-                          isFavorite,
-
-                      onToggleFavorite:
-                          () => controller
-                              .toggleFavoriteRecipe(
-                                  recipe),
-
-                      onShare:
-                          () => controller
-                              .shareRecipe(
-                                  recipe),
-
-                      onTap: () {
-
-                        Get.to(
-
-                          () => RecipeDetailView(),
-
-                          arguments: recipe,
-
-                          binding:
-                              BindingsBuilder(() {
-
-                            Get.lazyPut<
-                                RecipeDetailController>(
-
-                              () =>
-                                  RecipeDetailController(),
-                            );
-                          }),
-                        );
-                      },
-                    );
-                  },
-                ),
+                            binding: BindingsBuilder(() {
+                              Get.lazyPut<RecipeDetailController>(
+                                () => RecipeDetailController(),
+                              );
+                            }),
+                          );
+                        },
+                      );
+                    },
+                  );
+                }),
               ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  // skeleton loading
+  Widget _buildSkeleton() {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDF8F3),
+
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+
+            highlightColor: Colors.grey.shade100,
+
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+
+                Container(width: 150, height: 24, color: Colors.white),
+
+                const SizedBox(height: 30),
+
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: 2,
+
+                    itemBuilder: (context, index) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+
+                        height: 220,
+
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ======================================================
-// RECIPE CARD
-// ======================================================
-
-class _RecipeCard
-    extends StatelessWidget {
-
+class _RecipeCard extends StatelessWidget {
   final String title;
 
   final String location;
@@ -219,15 +226,13 @@ class _RecipeCard
 
   final bool isFavorite;
 
-  final VoidCallback
-      onToggleFavorite;
+  final VoidCallback onToggleFavorite;
 
   final VoidCallback onShare;
 
   final VoidCallback onTap;
 
   const _RecipeCard({
-
     required this.title,
 
     required this.location,
@@ -247,205 +252,118 @@ class _RecipeCard
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
-
       onTap: onTap,
 
       child: Container(
-
-        margin:
-            const EdgeInsets.only(
-                bottom: 20),
+        margin: const EdgeInsets.only(bottom: 20),
 
         height: 220,
 
         decoration: BoxDecoration(
-
-          borderRadius:
-              BorderRadius.circular(
-                  24),
+          borderRadius: BorderRadius.circular(24),
 
           image: DecorationImage(
-
-            image:
-                AssetImage(
-                    'assets/$imagePath'),
+            image: CachedNetworkImageProvider(imagePath),
 
             fit: BoxFit.cover,
           ),
         ),
 
         child: Stack(
-
           children: [
-
-            // =====================================================
-            // OVERLAY
-            // =====================================================
-
             Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
 
-              decoration:
-                  BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
 
-                borderRadius:
-                    BorderRadius.circular(
-                        24),
+                  end: Alignment.bottomCenter,
 
-                gradient:
-                    LinearGradient(
-
-                  begin:
-                      Alignment.topCenter,
-
-                  end:
-                      Alignment.bottomCenter,
-
-                  colors: [
-
-                    Colors.transparent,
-
-                    Colors.black
-                        .withOpacity(0.75),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                 ),
               ),
             ),
 
-            // =====================================================
-            // SHARE + BOOKMARK
-            // =====================================================
-
             Positioned(
-
               top: 16,
               right: 16,
 
               child: Row(
-
                 children: [
+                  _circleIcon(Icons.share, onShare),
+
+                  const SizedBox(width: 10),
 
                   _circleIcon(
-                    Icons.share,
-                    onShare,
-                  ),
-
-                  const SizedBox(
-                      width: 10),
-
-                  _circleIcon(
-
-                    isFavorite
-
-                        ? Icons.bookmark
-
-                        : Icons.bookmark_border,
+                    isFavorite ? Icons.bookmark : Icons.bookmark_border,
 
                     onToggleFavorite,
 
-                    color: isFavorite
-
-                        ? const Color(
-                            0xFFFFC107)
-
-                        : Colors.black,
+                    color: isFavorite ? Colors.amber : Colors.black,
                   ),
                 ],
               ),
             ),
 
-            // =====================================================
-            // INFO RESEP
-            // =====================================================
-
             Positioned(
-
               left: 20,
               right: 20,
               bottom: 20,
 
               child: Column(
-
-                crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
+                crossAxisAlignment: CrossAxisAlignment.start,
 
                 children: [
-
                   Text(
-
                     title,
 
-                    style:
-                        const TextStyle(
-
+                    style: const TextStyle(
                       fontSize: 26,
 
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
 
-                      color:
-                          Colors.white,
+                      color: Colors.white,
                     ),
                   ),
 
-                  const SizedBox(
-                      height: 6),
+                  const SizedBox(height: 6),
 
                   Row(
-
                     children: [
-
                       const Icon(
-
                         Icons.location_on,
 
                         size: 14,
 
-                        color:
-                            Colors.white,
+                        color: Colors.white,
                       ),
 
-                      const SizedBox(
-                          width: 4),
+                      const SizedBox(width: 4),
 
                       Text(
-
                         location,
 
-                        style:
-                            const TextStyle(
-                          color:
-                              Colors.white,
-                        ),
+                        style: const TextStyle(color: Colors.white),
                       ),
 
-                      const SizedBox(
-                          width: 12),
+                      const SizedBox(width: 12),
 
                       const Icon(
-
                         Icons.access_time,
 
                         size: 14,
 
-                        color:
-                            Colors.white,
+                        color: Colors.white,
                       ),
 
-                      const SizedBox(
-                          width: 4),
+                      const SizedBox(width: 4),
 
                       Text(
+                        '$time menit',
 
-                        time,
-
-                        style:
-                            const TextStyle(
-                          color:
-                              Colors.white,
-                        ),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ],
                   ),
@@ -459,39 +377,25 @@ class _RecipeCard
   }
 
   Widget _circleIcon(
-
     IconData icon,
 
     VoidCallback onTap, {
 
     Color color = Colors.black,
   }) {
-
     return GestureDetector(
-
       onTap: onTap,
 
       child: Container(
+        padding: const EdgeInsets.all(8),
 
-        padding:
-            const EdgeInsets.all(8),
-
-        decoration:
-            const BoxDecoration(
-
+        decoration: const BoxDecoration(
           color: Colors.white,
 
           shape: BoxShape.circle,
         ),
 
-        child: Icon(
-
-          icon,
-
-          size: 16,
-
-          color: color,
-        ),
+        child: Icon(icon, size: 16, color: color),
       ),
     );
   }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import '../controllers/home_controller.dart';
 import '../../../models/recipe_model.dart';
 
@@ -8,8 +12,12 @@ class HomeView extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => GestureDetector(
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return _buildSkeleton();
+      }
+
+      return GestureDetector(
         onTap: () {
           if (controller.isSearchActive.value) {
             controller.deactivateSearch();
@@ -19,127 +27,149 @@ class HomeView extends GetView<HomeController> {
           backgroundColor: const Color(0xFFFDF8F3),
           body: SafeArea(
             child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-
-                    // LOGO & TITLE
-                    Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // semua konten yang kena padding horizontal 20
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Image.asset(
-                          'assets/logo_santara.png',
-                          width: 45,
-                          height: 45,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                width: 45,
-                                height: 45,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD4A574),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.restaurant,
-                                  color: Color(0xFF8B4513),
-                                  size: 28,
-                                ),
+                        const SizedBox(height: 20),
+
+                        // logo app
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/logo_santara.png',
+                              width: 45,
+                              height: 45,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 45,
+                                  height: 45,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFD4A574),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.restaurant,
+                                    color: Color(0xFF8B4513),
+                                    size: 28,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Santara',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF8B4513),
                               ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
+
+                        const SizedBox(height: 20),
+
+                        // subtitle
                         const Text(
-                          'Santara',
+                          'Cita Rasa Nusantara Menanti !',
                           style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                             color: Color(0xFF8B4513),
-                            letterSpacing: 0.5,
                           ),
                         ),
+
+                        const SizedBox(height: 16),
+
+                        // search bar
+                        _buildSearchBar(),
+
+                        const SizedBox(height: 25),
+
+                        // title unggulan
+                        const Text(
+                          'Resep Unggulan Nusantara',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF8B4513),
+                          ),
+                        ),
+
+                        const SizedBox(height: 15),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                  ),
 
-                    // SUBTITLE
-                    const Text(
-                      'Cita Rasa Nusantara Menanti !',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF8B4513),
-                      ),
+                  // carousel full width, bebas dari padding
+                  _buildFeaturedCarousel(),
+
+                  // konten bawah carousel
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 25),
+
+                        // title category
+                        const Text(
+                          'Kategori Resep',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF8B4513),
+                          ),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        // category list
+                        SizedBox(
+                          height: 200,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: controller.categoryList.map((cat) {
+                              return _buildCategoryCard(
+                                cat['name'],
+                                cat['image_url'],
+                              );
+                            }).toList(),
+                          ),
+                        ),
+
+                        const SizedBox(height: 100),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-
-                    // SEARCH BAR
-                    _buildSearchBar(),
-                    const SizedBox(height: 25),
-
-                    // RESEP UNGGULAN
-                    const Text(
-                      'Resep Unggulan Nusantara',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF8B4513),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    SizedBox(
-                      height: 280,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: controller.featuredRecipes
-                            .map((recipe) => _buildFeaturedCard(recipe))
-                            .toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // KATEGORI RESEP
-                    const Text(
-                      'Kategori Resep',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF8B4513),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    SizedBox(
-                      height: 200,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: controller.categoryList
-                            .map(
-                              (cat) => _buildCategoryCard(
-                                cat['title']!,
-                                cat['imagePath']!,
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 100),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
-  // ===== SEARCH BAR =====
+  // search bar
   Widget _buildSearchBar() {
-    return Stack(
-      children: [
-        Column(
+    return Obx(
+      () => AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        transform: Matrix4.diagonal3Values(
+          controller.isSearchActive.value ? 1.01 : 1.0,
+          controller.isSearchActive.value ? 1.01 : 1.0,
+          1,
+        ),
+        transformAlignment: Alignment.center,
+        child: Column(
           children: [
             GestureDetector(
               onTap: controller.activateSearch,
@@ -152,6 +182,15 @@ class HomeView extends GetView<HomeController> {
                           topRight: Radius.circular(15),
                         )
                       : BorderRadius.circular(15),
+                  boxShadow: controller.isSearchActive.value
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF8B4513).withOpacity(0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
                 ),
                 child: TextField(
                   controller: controller.searchController,
@@ -160,7 +199,6 @@ class HomeView extends GetView<HomeController> {
                     hintText: 'Cari resep...',
                     hintStyle: TextStyle(
                       color: const Color(0xFF9C7A5A).withOpacity(0.5),
-                      fontSize: 15,
                     ),
                     prefixIcon: Icon(
                       Icons.search,
@@ -191,7 +229,10 @@ class HomeView extends GetView<HomeController> {
                 child: Column(
                   children: controller.searchSuggestions.map((suggestion) {
                     return InkWell(
-                      onTap: () => controller.selectSuggestion(suggestion),
+                      onTap: () {
+                        controller.searchController.text = suggestion;
+                        controller.deactivateSearch();
+                      },
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -202,7 +243,6 @@ class HomeView extends GetView<HomeController> {
                           border: Border(
                             top: BorderSide(
                               color: const Color(0xFF8B4513).withOpacity(0.1),
-                              width: 1,
                             ),
                           ),
                         ),
@@ -210,7 +250,6 @@ class HomeView extends GetView<HomeController> {
                           suggestion,
                           style: TextStyle(
                             color: const Color(0xFF8B4513).withOpacity(0.7),
-                            fontSize: 14,
                           ),
                         ),
                       ),
@@ -220,37 +259,102 @@ class HomeView extends GetView<HomeController> {
               ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  // ===== FEATURED CARD =====
+  // carousel full width
+  Widget _buildFeaturedCarousel() {
+    final RxInt currentIndex = 0.obs;
+
+    return Obx(
+      () => Column(
+        children: [
+          CarouselSlider.builder(
+            itemCount: controller.featuredRecipes.length,
+            itemBuilder: (_, index, __) =>
+                _buildFeaturedCard(controller.featuredRecipes[index]),
+            options: CarouselOptions(
+              height: 280,
+              viewportFraction: 0.85,
+              enlargeCenterPage: true,
+              enlargeFactor: 0.15,
+              autoPlay: true,
+              autoPlayInterval: const Duration(seconds: 4),
+              autoPlayAnimationDuration: const Duration(milliseconds: 700),
+              autoPlayCurve: Curves.easeInOutCubic,
+              padEnds: true,
+              onPageChanged: (i, _) => currentIndex.value = i,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(controller.featuredRecipes.length, (i) {
+              final isActive = i == currentIndex.value;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: isActive ? 20 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF8B4513)
+                      : const Color(0xFF8B4513).withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // card resep
   Widget _buildFeaturedCard(RecipeModel recipe) {
     final title = recipe.title;
+
     return Obx(() {
       final isFavorite = controller.favoriteRecipes[title] ?? false;
+
       return GestureDetector(
-        onTap: () => controller.goToRecipeDetail(recipe),
+        onTap: () {
+          controller.goToRecipeDetail(recipe);
+        },
         child: Container(
-          width: 280,
-          margin: const EdgeInsets.only(right: 15),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Stack(
               children: [
+                // image resep
                 Positioned.fill(
-                  child: Image.network(recipe.imageUrl, fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                    imageUrl: recipe.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) {
+                      return Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(color: Colors.white),
+                      );
+                    },
+                    errorWidget: (context, url, error) {
+                      return Container(
+                        color: const Color(0xFFEADBC8),
+                        child: const Icon(
+                          Icons.image_not_supported,
+                          color: Color(0xFF8B4513),
+                        ),
+                      );
+                    },
+                  ),
                 ),
+
+                // overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -264,7 +368,7 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ),
 
-                // TOP ROW (category badge + share + bookmark)
+                // category + tombol
                 Positioned(
                   top: 15,
                   left: 15,
@@ -297,9 +401,10 @@ class HomeView extends GetView<HomeController> {
                       ),
                       Row(
                         children: [
-                          // SHARE
                           GestureDetector(
-                            onTap: () => controller.shareRecipe(recipe),
+                            onTap: () {
+                              controller.shareRecipe(recipe);
+                            },
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
@@ -310,10 +415,10 @@ class HomeView extends GetView<HomeController> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          // BOOKMARK
                           GestureDetector(
-                            onTap: () =>
-                                controller.toggleFavoriteRecipe(recipe),
+                            onTap: () {
+                              controller.toggleFavoriteRecipe(recipe);
+                            },
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
@@ -337,7 +442,7 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ),
 
-                // BOTTOM INFO
+                // info bawah
                 Positioned(
                   bottom: 20,
                   left: 20,
@@ -364,10 +469,7 @@ class HomeView extends GetView<HomeController> {
                           const SizedBox(width: 5),
                           Text(
                             recipe.location,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                            ),
+                            style: const TextStyle(color: Colors.white),
                           ),
                           const SizedBox(width: 15),
                           const Icon(
@@ -378,10 +480,7 @@ class HomeView extends GetView<HomeController> {
                           const SizedBox(width: 5),
                           Text(
                             '${recipe.cookingTime} menit',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                            ),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
@@ -396,28 +495,37 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
-  // ===== CATEGORY CARD =====
-  Widget _buildCategoryCard(String title, String imagePath) {
+  // card category
+ Widget _buildCategoryCard(String title, String imagePath) {
     return GestureDetector(
-      onTap: () => controller.goToCategory(title),
+      onTap: () {
+        controller.goToCategory(title);
+      },
       child: Container(
         width: 160,
         margin: const EdgeInsets.only(right: 15),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15),
           child: Stack(
             children: [
-              Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
+              Positioned.fill(
+                child: CachedNetworkImage(
+                  imageUrl: imagePath,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.grey.shade300,
+                    highlightColor: Colors.grey.shade100,
+                    child: Container(color: Colors.white),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: const Color(0xFFEADBC8),
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Color(0xFF8B4513),
+                    ),
+                  ),
+                ),
+              ),
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -441,6 +549,47 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // skeleton loading
+  Widget _buildSkeleton() {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDF8F3),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Container(width: 120, height: 25, color: Colors.white),
+                const SizedBox(height: 20),
+                Container(
+                  height: 55,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                const SizedBox(height: 25),
+                Container(width: 180, height: 20, color: Colors.white),
+                const SizedBox(height: 20),
+                Container(
+                  height: 280,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

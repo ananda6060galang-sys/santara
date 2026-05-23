@@ -20,7 +20,10 @@ class HomeWithNavbar extends GetView<HomeWithNavbarController> {
       final pages = [
         const HomeView(),
         const HomeView(),
-        const CategoryPage(),
+        Obx(
+          () =>
+              CategoryPage(selectedCategory: controller.selectedCategory.value),
+        ),
         const Favoriteview(),
         const ProfilePage(),
       ];
@@ -81,16 +84,8 @@ class HomeWithNavbar extends GetView<HomeWithNavbarController> {
               color: Color(0xFFB8956A),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              activeIcon,
-              size: 26,
-              color: Colors.white,
-            ),
+            child: Icon(activeIcon, size: 26, color: Colors.white),
           )
-        : Icon(
-            inactiveIcon,
-            size: 26,
-            color: Colors.black,
-          );
+        : Icon(inactiveIcon, size: 26, color: Colors.black);
   }
 }
