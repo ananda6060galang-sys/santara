@@ -119,7 +119,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     itemBuilder: (context, index) {
                       final recipe = recipes[index];
 
-                      final isFavorite = controller.isFavorite(recipe.title);
+                      final isFavorite = controller.isFavorite(recipe.id);
 
                       return _RecipeCard(
                         title: recipe.title,

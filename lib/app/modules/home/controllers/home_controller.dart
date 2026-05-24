@@ -12,19 +12,34 @@ import '../../recipe_detail/controllers/recipe_detail_controller.dart';
 import '../../recipe_detail/views/recipe_detail_view.dart';
 
 class HomeController extends GetxController {
+  Worker? _favoriteWorker;
+
   // =====================================================
   // CONTROLLER SEARCH
   // buat nyimpen text search
   // =====================================================
 
-  final searchController = TextEditingController();
+  TextEditingController? _searchController;
+
+  TextEditingController get searchController {
+    return _searchController ??= TextEditingController();
+  }
 
   // =====================================================
   // FOCUS NODE SEARCH
   // detect search lagi aktif apa ngga
   // =====================================================
 
-  final searchFocusNode = FocusNode();
+  FocusNode? _searchFocusNode;
+
+  FocusNode get searchFocusNode {
+    if (_searchFocusNode == null) {
+      _searchFocusNode = FocusNode();
+      _searchFocusNode!.addListener(_searchFocusListener);
+    }
+
+    return _searchFocusNode!;
+  }
 
   // =====================================================
   // STATUS SEARCH
@@ -59,6 +74,10 @@ class HomeController extends GetxController {
   // SEARCH SUGGESTIONS
   // suggestion pas search diklik
   // =====================================================
+
+  final searchQuery = ''.obs;
+
+  final searchResults = <RecipeModel>[].obs;
 
   final searchSuggestions = [
     'Resep Rendang Padang',
@@ -96,9 +115,19 @@ class HomeController extends GetxController {
     super.onInit();
 
     // detect search focus
-    searchFocusNode.addListener(() {
-      isSearchActive.value = searchFocusNode.hasFocus;
-    });
+    searchFocusNode;
+
+    // realtime search pas user ngetik
+    searchController.addListener(_onSearchChanged);
+
+    // kalau koleksi berubah, icon bookmark ikut refresh
+    if (Get.isRegistered<FavoriteController>()) {
+      final favoriteController = Get.find<FavoriteController>();
+
+      _favoriteWorker = ever(favoriteController.favorites, (_) {
+        _loadFavorites();
+      });
+    }
 
     // ambil data recipe
     getRecipes();
@@ -123,6 +152,8 @@ class HomeController extends GetxController {
       featuredRecipes.value = data.map<RecipeModel>((item) {
         return RecipeModel.fromJson(item);
       }).toList();
+
+      _filterSearchResults(searchQuery.value);
 
       // load status favorite
       await _loadFavorites();
@@ -164,10 +195,14 @@ class HomeController extends GetxController {
 
   Future<void> _loadFavorites() async {
     for (final recipe in featuredRecipes) {
-      final isFav = await isRecipeFavorited(recipe.title);
+      final isFav = await isRecipeFavorited(recipe.id);
 
-      favoriteRecipes[recipe.title] = isFav;
+      favoriteRecipes[recipe.id] = isFav;
     }
+  }
+
+  Future<void> refreshFavoriteStatus() async {
+    await _loadFavorites();
   }
 
   // =====================================================
@@ -197,7 +232,68 @@ class HomeController extends GetxController {
   void selectSuggestion(String suggestion) {
     searchController.text = suggestion;
 
+    _filterSearchResults(suggestion);
+
+    isSearchActive.value = false;
+
+    searchFocusNode.unfocus();
+  }
+
+  void selectSearchRecipe(RecipeModel recipe) {
     deactivateSearch();
+
+    searchController.clear();
+
+    goToRecipeDetail(recipe);
+  }
+
+  void onMicTap() {
+    Get.snackbar(
+      'Info',
+      'Fitur voice search belum tersedia.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  void _onSearchChanged() {
+    searchQuery.value = searchController.text;
+
+    _filterSearchResults(searchQuery.value);
+  }
+
+  void _filterSearchResults(String query) {
+    final keyword = query.trim().toLowerCase();
+
+    if (keyword.isEmpty) {
+      searchResults.clear();
+      return;
+    }
+
+    // pecah keyword biar rekomendasi kayak "Resep Rendang Padang" tetap nyantol
+    final keywords = keyword
+        .split(' ')
+        .where((word) => word.isNotEmpty && word != 'resep')
+        .toList();
+    final cleanKeyword = keywords.join(' ');
+
+    searchResults.value = featuredRecipes.where((recipe) {
+      final searchableText =
+          '${recipe.title} ${recipe.category} ${recipe.location} '
+                  '${recipe.description} ${recipe.cookingTime} menit'
+              .toLowerCase();
+
+      // kalau phrase lengkap ga ada, minimal salah satu kata penting tetap dicari
+      return searchableText.contains(cleanKeyword) ||
+          keywords.any(searchableText.contains);
+    }).toList();
+  }
+
+  void _searchFocusListener() {
+    final focusNode = _searchFocusNode;
+
+    if (focusNode == null) return;
+
+    isSearchActive.value = focusNode.hasFocus;
   }
 
   // =====================================================
@@ -274,7 +370,7 @@ Bagikan resep nusantara favorit kamu! 🇮🇩
 
     final result = await toggleFavorite(recipeData);
 
-    favoriteRecipes[recipe.title] = result;
+    favoriteRecipes[recipe.id] = result;
 
     // refresh biar icon langsung update
     favoriteRecipes.refresh();
@@ -303,9 +399,19 @@ Bagikan resep nusantara favorit kamu! 🇮🇩
 
   @override
   void onClose() {
-    searchController.dispose();
+    _favoriteWorker?.dispose();
 
-    searchFocusNode.dispose();
+    _searchController?.removeListener(_onSearchChanged);
+
+    _searchController?.dispose();
+
+    _searchFocusNode?.removeListener(_searchFocusListener);
+
+    _searchFocusNode?.dispose();
+
+    _searchController = null;
+
+    _searchFocusNode = null;
 
     super.onClose();
   }

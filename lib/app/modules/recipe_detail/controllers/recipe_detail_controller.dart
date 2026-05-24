@@ -96,7 +96,7 @@ class RecipeDetailController extends GetxController {
 
     final favorited =
         await isRecipeFavorited(
-            recipe.title);
+            recipe.id);
 
     isFavorited.value =
         favorited;

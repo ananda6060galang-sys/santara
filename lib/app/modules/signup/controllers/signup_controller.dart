@@ -26,12 +26,14 @@ class SignUpController extends GetxController {
   // TOGGLE PASSWORD
 
   void togglePasswordVisibility() {
+    // ganti mode password keliatan / disembunyiin
     isPasswordHidden = !isPasswordHidden;
 
     update();
   }
 
   void toggleConfirmPasswordVisibility() {
+    // sama kayak password, tapi buat confirm password
     isConfirmPasswordHidden = !isConfirmPasswordHidden;
 
     update();
@@ -41,6 +43,7 @@ class SignUpController extends GetxController {
 
 
   Future<void> signUp() async {
+    // ambil input user dari form
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -94,6 +97,7 @@ class SignUpController extends GetxController {
 
       // REGISTER
 
+      // daftar ke supabase auth, name dikirim ke metadata
       await supabase.auth.signUp(
         email: email,
 
@@ -158,6 +162,7 @@ class SignUpController extends GetxController {
 
   Future<void> signUpWithGoogle() async {
     try {
+      // daftar/login pakai akun google
       await supabase.auth.signInWithOAuth(
         OAuthProvider.google,
 
@@ -182,6 +187,7 @@ class SignUpController extends GetxController {
 
   Future<void> signUpWithFacebook() async {
     try {
+      // daftar/login pakai akun facebook
       await supabase.auth.signInWithOAuth(
         OAuthProvider.facebook,
 
@@ -205,6 +211,7 @@ class SignUpController extends GetxController {
   // GO TO LOGIN
 
   void goToLogin() {
+    // tutup keyboard dulu biar transisi lebih enak
     FocusManager.instance.primaryFocus?.unfocus();
 
     Future.delayed(const Duration(milliseconds: 300), () {

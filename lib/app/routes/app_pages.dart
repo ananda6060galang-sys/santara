@@ -53,8 +53,10 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
+  // halaman pertama pas app dibuka
   static const INITIAL = Routes.SPLASH;
 
+  // daftar semua route yang dipakai GetX
   static final routes = [
     GetPage(
       name: Routes.SPLASH,

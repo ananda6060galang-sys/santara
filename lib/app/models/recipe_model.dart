@@ -1,5 +1,6 @@
 class RecipeModel {
 
+  // model utama buat nampung data resep dari table recipes
   final String id;
   final String title;
   final String description;
@@ -31,6 +32,7 @@ class RecipeModel {
     Map<String, dynamic> json,
   ) {
 
+    // convert data supabase ke object RecipeModel
     return RecipeModel(
 
       id:
@@ -70,6 +72,7 @@ class RecipeModel {
 
   Map<String, dynamic> toJson() {
 
+    // convert balik ke map kalau butuh dikirim/simpan
     return {
 
       'id':

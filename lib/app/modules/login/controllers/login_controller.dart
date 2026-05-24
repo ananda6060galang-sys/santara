@@ -50,6 +50,7 @@ class LoginController extends GetxController {
 
   Future<void> login() async {
 
+    // ambil input dari form login
     final email =
         usernameController.text.trim();
 
@@ -59,6 +60,7 @@ class LoginController extends GetxController {
     if (email.isEmpty ||
         password.isEmpty) {
 
+      // kalau kosong, stop dulu biar ga query sia-sia
       Get.snackbar(
 
         'Gagal',
@@ -82,9 +84,11 @@ class LoginController extends GetxController {
 
       isLoading.value = true;
 
+      // tutup keyboard sebelum proses login
       FocusManager.instance.primaryFocus
           ?.unfocus();
 
+      // login ke supabase auth
       await supabase.auth.signInWithPassword(
 
         email: email,
@@ -176,6 +180,7 @@ class LoginController extends GetxController {
 
   Future<void> loginWithGoogle() async {
 
+    // login pakai google oauth
     await supabase.auth.signInWithOAuth(
 
       OAuthProvider.google,
@@ -196,6 +201,7 @@ class LoginController extends GetxController {
 
   Future<void> loginWithFacebook() async {
 
+    // login pakai facebook oauth
     await supabase.auth.signInWithOAuth(
 
       OAuthProvider.facebook,
@@ -216,6 +222,7 @@ class LoginController extends GetxController {
 
   void goToSignUp() {
 
+    // tutup keyboard dulu sebelum pindah halaman
     FocusManager.instance.primaryFocus
         ?.unfocus();
 

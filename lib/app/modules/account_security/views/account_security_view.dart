@@ -81,7 +81,9 @@ class KeamananAkunPage extends GetView<KeamananAkunController> {
 
                     title: "Ubah Password",
 
-                    onTap: controller.ubahPassword,
+                    onTap: () {
+                      controller.ubahPassword();
+                    },
                   ),
 
                   _divider(),
@@ -116,35 +118,41 @@ class KeamananAkunPage extends GetView<KeamananAkunController> {
 
             const SizedBox(height: 10),
 
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+            Obx(
+              () => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
 
-              decoration: BoxDecoration(
-                color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Colors.white,
 
-                borderRadius: BorderRadius.circular(16),
-              ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
 
-              child: Column(
-                children: [
-                  _buildInfoTile(
-                    icon: Icons.schedule_rounded,
+                child: Column(
+                  children: [
+                    _buildInfoTile(
+                      icon: Icons.schedule_rounded,
 
-                    title: "Terakhir Login",
+                      title: "Terakhir Login",
 
-                    value: controller.lastLogin,
-                  ),
+                      value: controller.isLoading.value
+                          ? "Memuat..."
+                          : controller.lastLogin.value,
+                    ),
 
-                  _divider(),
+                    _divider(),
 
-                  _buildInfoTile(
-                    icon: Icons.location_on_outlined,
+                    _buildInfoTile(
+                      icon: Icons.location_on_outlined,
 
-                    title: "Lokasi Login",
+                      title: "Lokasi Login",
 
-                    value: controller.loginLocation,
-                  ),
-                ],
+                      value: controller.isLoading.value
+                          ? "Memuat..."
+                          : controller.loginLocation.value,
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

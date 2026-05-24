@@ -3,6 +3,7 @@ part of 'app_pages.dart';
 abstract class Routes {
   Routes._();
 
+  // kumpulan nama route, biar pindah halaman ga typo string
   static const SPLASH = '/splash';
   static const LOGIN = '/login';
   static const SIGNUP = '/signup';

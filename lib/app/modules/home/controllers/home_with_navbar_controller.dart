@@ -56,6 +56,17 @@ class HomeWithNavbarController extends GetxController {
         },
       );
     }
+
+    // refresh bookmark pas balik tab biar icon ga nyangkut
+    if ((index == 0 || index == 1) &&
+        Get.isRegistered<HomeController>()) {
+      Get.find<HomeController>().refreshFavoriteStatus();
+    }
+
+    if (index == 2 &&
+        Get.isRegistered<CategoryController>()) {
+      Get.find<CategoryController>().refreshFavoriteStatus();
+    }
   }
 
   // buka category sesuai yg dipencet

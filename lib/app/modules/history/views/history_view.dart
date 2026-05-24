@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../models/recipe_model.dart';
 import '../controllers/history_controller.dart';
+import '../../recipe_detail/controllers/recipe_detail_controller.dart';
+import '../../recipe_detail/views/recipe_detail_view.dart';
 
 class HistoryPage extends GetView<HistoryController> {
   const HistoryPage({super.key});
@@ -8,15 +11,6 @@ class HistoryPage extends GetView<HistoryController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.isLoading.value) {
-        return const Scaffold(
-          backgroundColor: Color(0xFFFDF8F3),
-          body: Center(
-            child: CircularProgressIndicator(color: Color(0xFFB8956A)),
-          ),
-        );
-      }
-
       return Scaffold(
         backgroundColor: const Color(0xFFFDF8F3),
         body: SafeArea(
@@ -33,7 +27,7 @@ class HistoryPage extends GetView<HistoryController> {
                         color: Color(0xFF8B5A3C),
                         size: 22,
                       ),
-                      onPressed: () => Get.back(),
+                      onPressed: controller.goBack,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -86,9 +80,15 @@ class HistoryPage extends GetView<HistoryController> {
 
               // CONTENT
               Expanded(
-                child: controller.history.isEmpty
-                    ? _buildEmptyState()
-                    : _buildHistoryList(),
+                child: controller.isLoading.value
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFB8956A),
+                        ),
+                      )
+                    : controller.history.isEmpty
+                        ? _buildEmptyState()
+                        : _buildHistoryList(),
               ),
             ],
           ),
@@ -165,7 +165,15 @@ class HistoryPage extends GetView<HistoryController> {
           ),
           child: InkWell(
             onTap: () {
-              // Navigate to recipe detail
+              Get.to(
+                () => const RecipeDetailView(),
+                arguments: _mapToRecipe(item),
+                binding: BindingsBuilder(() {
+                  Get.lazyPut<RecipeDetailController>(
+                    () => RecipeDetailController(),
+                  );
+                }),
+              );
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
@@ -175,27 +183,7 @@ class HistoryPage extends GetView<HistoryController> {
                   // RECIPE IMAGE
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child: Image.asset(
-                      item['imagePath'] ?? 'assets/makan.png',
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8D5B7),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.restaurant,
-                            size: 32,
-                            color: Color(0xFF8B5A3C),
-                          ),
-                        );
-                      },
-                    ),
+                    child: _buildRecipeImage(item['imagePath'] ?? ''),
                   ),
                   const SizedBox(width: 14),
 
@@ -272,6 +260,68 @@ class HistoryPage extends GetView<HistoryController> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildRecipeImage(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _imageFallback();
+        },
+      );
+    }
+
+    return Image.asset(
+      imagePath.isEmpty ? 'assets/makan.png' : imagePath,
+      width: 80,
+      height: 80,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return _imageFallback();
+      },
+    );
+  }
+
+  Widget _imageFallback() {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8D5B7),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Icon(
+        Icons.restaurant,
+        size: 32,
+        color: Color(0xFF8B5A3C),
+      ),
+    );
+  }
+
+  RecipeModel _mapToRecipe(Map<String, dynamic> recipe) {
+    final duration = recipe['duration']?.toString() ?? '0 menit';
+    final rawCookingTime = recipe['cooking_time'];
+    final cookingTime = rawCookingTime is int
+        ? rawCookingTime
+        : int.tryParse(duration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+
+    return RecipeModel(
+      id: recipe['id'] ?? '',
+      title: recipe['title'] ?? 'Resep',
+      description: recipe['description'] ?? '',
+      imageUrl: recipe['image_url'] ?? recipe['imagePath'] ?? '',
+      location: recipe['location'] ?? '',
+      cookingTime: cookingTime,
+      category: recipe['categories']?['name'] ?? '',
+      ingredients: recipe['ingredients'] ?? '',
+      steps: recipe['steps'] ?? '',
+      servings: recipe['servings'] ?? 0,
+      difficulty: recipe['difficulty'] ?? '',
     );
   }
 }

@@ -9,6 +9,8 @@ import '../../favorite/controllers/favorite_controller.dart';
 import '../../home/controllers/home_with_navbar_controller.dart';
 
 class CategoryController extends GetxController {
+  Worker? _favoriteWorker;
+
   // state utama
   final currentCategoryIndex = 0.obs;
 
@@ -48,6 +50,15 @@ class CategoryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // kalau koleksi berubah, icon bookmark ikut refresh
+    if (Get.isRegistered<FavoriteController>()) {
+      final favoriteController = Get.find<FavoriteController>();
+
+      _favoriteWorker = ever(favoriteController.favorites, (_) {
+        _loadFavorites();
+      });
+    }
 
     getCategories();
 
@@ -136,15 +147,19 @@ class CategoryController extends GetxController {
   // load bookmark
   Future<void> _loadFavorites() async {
     for (final recipe in recipes) {
-      final isFav = await isRecipeFavorited(recipe.title);
+      final isFav = await isRecipeFavorited(recipe.id);
 
-      favoriteCache[recipe.title] = isFav;
+      favoriteCache[recipe.id] = isFav;
     }
   }
 
+  Future<void> refreshFavoriteStatus() async {
+    await _loadFavorites();
+  }
+
   // cek bookmark
-  bool isFavorite(String title) {
-    return favoriteCache[title] ?? false;
+  bool isFavorite(String recipeId) {
+    return favoriteCache[recipeId] ?? false;
   }
 
   // bookmark recipe
@@ -165,7 +180,7 @@ class CategoryController extends GetxController {
 
     final result = await toggleFavorite(recipeData);
 
-    favoriteCache[recipe.title] = result;
+    favoriteCache[recipe.id] = result;
 
     favoriteCache.refresh();
 
@@ -206,5 +221,12 @@ Bagikan resep nusantara favorit kamu! 🇮🇩
 ''';
 
     Share.share(text, subject: 'Resep ${recipe.title} - Santara');
+  }
+
+  @override
+  void onClose() {
+    _favoriteWorker?.dispose();
+
+    super.onClose();
   }
 }

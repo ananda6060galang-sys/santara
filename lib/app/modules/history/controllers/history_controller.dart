@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HistoryController extends GetxController {
+  // connect ke supabase
+  final supabase = Supabase.instance.client;
+
+  // riwayat user yang lagi login
   final RxList<Map<String, dynamic>> history = <Map<String, dynamic>>[].obs;
   final RxBool isLoading = true.obs;
 
@@ -13,48 +16,81 @@ class HistoryController extends GetxController {
     loadHistory();
   }
 
-  Future<void> loadHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? historyJson = prefs.getString('recipe_history');
-
-    if (historyJson != null) {
-      final List<dynamic> decodedList = json.decode(historyJson);
-      final List<Map<String, dynamic>> parsed = decodedList
-          .map<Map<String, dynamic>>((item) => Map<String, dynamic>.from(item))
-          .toList();
-
-      // Sort by timestamp (newest first)
-      parsed.sort((a, b) {
-        int timeA = int.tryParse(a['timestamp'].toString()) ?? 0;
-        int timeB = int.tryParse(b['timestamp'].toString()) ?? 0;
-        return timeB.compareTo(timeA);
-      });
-
-      history.assignAll(parsed);
+  void goBack() {
+    // balik ke halaman sebelumnya, fallback ke home kalau stack kosong
+    if (Get.key.currentState?.canPop() ?? false) {
+      Get.back();
+    } else {
+      Get.offAllNamed('/home', arguments: {'initialIndex': 4});
     }
+  }
 
-    isLoading.value = false;
+  Future<void> loadHistory() async {
+    try {
+      isLoading.value = true;
+
+      // ambil user login biar riwayat tiap akun beda
+      final user = supabase.auth.currentUser;
+
+      if (user == null) {
+        history.clear();
+        return;
+      }
+
+      final data = await supabase
+          .from('history')
+          .select('viewed_at, recipes(*, categories(name))')
+          .eq('user_id', user.id)
+          .order('viewed_at', ascending: false);
+
+      history.assignAll(
+        data.map<Map<String, dynamic>>((item) {
+          final recipe = Map<String, dynamic>.from(item['recipes'] ?? {});
+          final mappedRecipe = _recipeToHistoryMap(recipe);
+
+          mappedRecipe['timestamp'] = item['viewed_at'];
+
+          return mappedRecipe;
+        }).toList(),
+      );
+    } catch (e) {
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> clearHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('recipe_history');
-    history.clear();
+    try {
+      // hapus semua riwayat punya user login
+      final user = supabase.auth.currentUser;
 
-    Get.snackbar(
-      '',
-      'Riwayat berhasil dihapus',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF8B4513),
-      colorText: Colors.white,
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.all(10),
-      messageText: const Text(
+      if (user == null) {
+        history.clear();
+        return;
+      }
+
+      await supabase.from('history').delete().eq('user_id', user.id);
+
+      history.clear();
+
+      Get.snackbar(
+        '',
         'Riwayat berhasil dihapus',
-        style: TextStyle(color: Colors.white),
-      ),
-      titleText: const SizedBox.shrink(),
-    );
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF8B4513),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(10),
+        messageText: const Text(
+          'Riwayat berhasil dihapus',
+          style: TextStyle(color: Colors.white),
+        ),
+        titleText: const SizedBox.shrink(),
+      );
+    } catch (e) {
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   void showClearHistoryDialog() {
@@ -161,17 +197,12 @@ class HistoryController extends GetxController {
   }
 
   String formatTimestamp(dynamic timestamp) {
-    int parsedTimestamp;
+    final date = _parseDate(timestamp);
 
-    if (timestamp is int) {
-      parsedTimestamp = timestamp;
-    } else if (timestamp is String) {
-      parsedTimestamp = int.tryParse(timestamp) ?? 0;
-    } else {
-      parsedTimestamp = 0;
+    if (date == null) {
+      return '-';
     }
 
-    final date = DateTime.fromMillisecondsSinceEpoch(parsedTimestamp);
     final now = DateTime.now();
     final difference = now.difference(date);
 
@@ -187,33 +218,81 @@ class HistoryController extends GetxController {
       return '${date.day}/${date.month}/${date.year}';
     }
   }
+
+  DateTime? _parseDate(dynamic timestamp) {
+    if (timestamp is int) {
+      return DateTime.fromMillisecondsSinceEpoch(timestamp);
+    }
+
+    if (timestamp is String) {
+      final millis = int.tryParse(timestamp);
+
+      if (millis != null) {
+        return DateTime.fromMillisecondsSinceEpoch(millis);
+      }
+
+      return DateTime.tryParse(timestamp)?.toLocal();
+    }
+
+    return null;
+  }
 }
 
 // ============================================
 // HELPER FUNCTION - Add to History
 // ============================================
+Map<String, dynamic> _recipeToHistoryMap(Map<String, dynamic> recipe) {
+  return {
+    'id': recipe['id'] ?? '',
+    'title': recipe['title'] ?? 'Resep',
+    'description': recipe['description'] ?? '',
+    'imagePath': recipe['image_url'] ?? recipe['imagePath'] ?? '',
+    'image_url': recipe['image_url'] ?? recipe['imagePath'] ?? '',
+    'location': recipe['location'] ?? '',
+    'duration': '${recipe['cooking_time'] ?? 0} menit',
+    'cooking_time': recipe['cooking_time'] ?? 0,
+    'ingredients': recipe['ingredients'] ?? '',
+    'steps': recipe['steps'] ?? '',
+    'servings': recipe['servings'] ?? 0,
+    'difficulty': recipe['difficulty'] ?? '',
+    'categories': recipe['categories'],
+  };
+}
+
 Future<void> addToHistory(Map<String, dynamic> recipe) async {
-  final prefs = await SharedPreferences.getInstance();
-  final String? historyJson = prefs.getString('recipe_history');
+  final supabase = Supabase.instance.client;
 
-  List<dynamic> history = [];
-  if (historyJson != null) {
-    history = json.decode(historyJson);
+  // ambil user login biar riwayat masuk ke akun yang bener
+  final user = supabase.auth.currentUser;
+  final recipeId = recipe['id']?.toString() ?? '';
+
+  if (user == null || recipeId.isEmpty) {
+    return;
   }
 
-  // Remove if already exists (to avoid duplicates)
-  history.removeWhere((item) => item['id'] == recipe['id']);
+  final existing = await supabase
+      .from('history')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('recipe_id', recipeId)
+      .maybeSingle();
 
-  // Add timestamp
-  recipe['timestamp'] = DateTime.now().millisecondsSinceEpoch.toString();
-
-  // Add to beginning of list
-  history.insert(0, recipe);
-
-  // Keep only last 50 items
-  if (history.length > 50) {
-    history = history.sublist(0, 50);
+  if (existing != null) {
+    // kalau udah pernah dibuka, update waktunya aja
+    await supabase
+        .from('history')
+        .update({'viewed_at': DateTime.now().toIso8601String()})
+        .eq('user_id', user.id)
+        .eq('recipe_id', recipeId);
+  } else {
+    // kalau belum ada, masukin history baru
+    await supabase.from('history').insert({
+      'user_id': user.id,
+      'recipe_id': recipeId,
+    });
   }
 
-  await prefs.setString('recipe_history', json.encode(history));
+  if (Get.isRegistered<HistoryController>()) {
+    Get.find<HistoryController>().loadHistory();
+  }
 }
